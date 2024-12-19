@@ -1,0 +1,26 @@
+package com.fazeyna.token;
+
+import java.util.List;
+import java.util.Optional;
+
+import com.fazeyna.users.UserEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface TokenRepository extends JpaRepository<Token, Integer> {
+
+    @Query(value = """
+      select t from Token t inner join UserEntity u\s
+      on t.user.id = u.id\s
+      where u.id = :id and (t.expired = false or t.revoked = false)\s
+      """)
+    List<Token> findAllValidTokenByUser(Long id);
+
+    Optional<Token> findByToken(String token);
+
+    @Query("select u from UserEntity u join Token t on t.user.id = u.id where t.token = :token")
+    Optional<UserEntity> findUserByToken(String token);
+
+}
